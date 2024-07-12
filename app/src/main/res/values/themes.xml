@@ -3,6 +3,9 @@
     <style name="Base.Theme.PetFeeder" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/orange</item>
+        <item name="colorOnSurface">@color/orangelight</item>
+
     </style>
 
     <style name="Theme.PetFeeder" parent="Base.Theme.PetFeeder" />

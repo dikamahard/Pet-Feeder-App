@@ -36,6 +36,10 @@ class HomeFragment : Fragment() {
     private lateinit var statePreferences: StatePreferences
     private lateinit var mqttCLient:MqttAndroidClient
     val topic = "garudahacks/tes"
+    val giveFoodTopic = "farfeed/give"
+    val getFoodTopic = "farfeed/get"
+    var currentWeigth = 0
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,16 +64,122 @@ class HomeFragment : Fragment() {
         //val serverURI   = "tcp://broker.hivemq.com:1883"
         val serverURI   = "tcp://203.194.113.47:1883"
 
+
         val clientId    = "qwerty123456"
         val username = "garudahacks"
         val password = "asustufgaming"
-        val message = "HALO FROM THE APP"
-
+        //val message = "HALO FROM THE APP"
 
         // Open MQTT Broker communication
         val mqttClient = MQTTClient(requireContext(), serverURI, clientId)
 
+        // Connect and login to MQTT Broker
+        mqttClient.connect(
+            username,
+            password,
+            object : IMqttActionListener {
+                override fun onSuccess(asyncActionToken: IMqttToken?) {
+                    Log.d(this.javaClass.name, "Connection success")
+                    Toast.makeText(context, "MQTT Connection success", Toast.LENGTH_SHORT).show()
+                    mqttClient.subscribe(
+                        "weightData",
+                        1,
+                        object : IMqttActionListener {
+                            override fun onSuccess(asyncActionToken: IMqttToken?) {
+                                val msg = "Subscribed to: weightData"
+                                Log.d(this.javaClass.name, msg)
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
 
+                            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                                Log.d(this.javaClass.name, "Failed to subscribe: $topic")
+                            }
+                        }
+                    )
+                }
+
+                override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                    Log.d(this.javaClass.name, "Connection failure: ${exception.toString()}")
+
+                    Toast.makeText(context, "MQTT Connection fails: ${exception.toString()}", Toast.LENGTH_SHORT).show()
+
+                    // Come back to Connect Fragment
+                }
+            },
+            object : MqttCallback {
+                override fun messageArrived(topic: String?, message: MqttMessage?) {
+                    val msg = "Receive message: ${message.toString()} from topic: $topic"
+                    Log.d(this.javaClass.name, msg)
+                    binding.tvWeight.text = message.toString() + " Grams"
+                    currentWeigth = message.toString().toInt()
+
+                    //Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                }
+
+                override fun connectionLost(cause: Throwable?) {
+                    Log.d(this.javaClass.name, "Connection lost ${cause.toString()}")
+                }
+
+                override fun deliveryComplete(token: IMqttDeliveryToken?) {
+                    Log.d(this.javaClass.name, "Delivery complete")
+                }
+            }
+        )
+
+
+
+        binding.btnFood.setOnClickListener {
+            if (mqttClient.isConnected()) {
+                if (currentWeigth < binding.textInputEditText.text.toString().toInt()) {
+                    Toast.makeText(requireContext(),"Food Not Enough", Toast.LENGTH_SHORT).show()
+                }else {
+                    Log.d("TAG", "btnfood clicked")
+                    mqttClient.publish(
+                        topic,
+                        binding.textInputEditText.text.toString(),
+                        1,
+                        false,
+                        object : IMqttActionListener {
+                            override fun onSuccess(asyncActionToken: IMqttToken?) {
+                                val msg ="Publish message:  to topic: $topic"
+                                Log.d(this.javaClass.name, msg)
+
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+
+                            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                                Log.d(this.javaClass.name, "Failed to publish message to topic")
+                            }
+                        })
+                }
+            }else {
+                Toast.makeText(requireContext(), "Not Connected", Toast.LENGTH_SHORT).show()
+            }
+
+        }
+
+        /*
+        if (mqttClient.isConnected()) {
+            mqttClient.subscribe(
+                "weightData",
+                1,
+                object : IMqttActionListener {
+                    override fun onSuccess(asyncActionToken: IMqttToken?) {
+                        val msg = "Subscribed to: weightData"
+                        Log.d(this.javaClass.name, msg)
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    }
+
+                    override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                        Log.d(this.javaClass.name, "Failed to subscribe: $topic")
+                    }
+                }
+            )
+        }
+
+         */
+
+        /*
 
         binding.btnTes.setOnClickListener {
             lifecycleScope.launch {
@@ -90,23 +200,41 @@ class HomeFragment : Fragment() {
                         Toast.makeText(context, "MQTT Connection success", Toast.LENGTH_SHORT).show()
 
                         // TODO: PUBLISH
-                        mqttClient.publish(
-                            topic,
-                            message,
+//                        mqttClient.publish(
+//                            topic,
+//                            message,
+//                            1,
+//                            false,
+//                            object : IMqttActionListener {
+//                                override fun onSuccess(asyncActionToken: IMqttToken?) {
+//                                    val msg ="Publish message: $message to topic: $topic"
+//                                    Log.d(this.javaClass.name, msg)
+//
+//                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+//                                }
+//
+//                                override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+//                                    Log.d(this.javaClass.name, "Failed to publish message to topic")
+//                                }
+//                            })
+
+                        mqttClient.subscribe(
+                            "weightData",
                             1,
-                            false,
                             object : IMqttActionListener {
                                 override fun onSuccess(asyncActionToken: IMqttToken?) {
-                                    val msg ="Publish message: $message to topic: $topic"
+                                    val msg = "Subscribed to: weightData"
                                     Log.d(this.javaClass.name, msg)
+
 
                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                 }
 
                                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                                    Log.d(this.javaClass.name, "Failed to publish message to topic")
+                                    Log.d(this.javaClass.name, "Failed to subscribe: $topic")
                                 }
-                            })
+                            }
+                        )
 
                     }
 
@@ -122,6 +250,7 @@ class HomeFragment : Fragment() {
                     override fun messageArrived(topic: String?, message: MqttMessage?) {
                         val msg = "Receive message: ${message.toString()} from topic: $topic"
                         Log.d(this.javaClass.name, msg)
+                        binding.tvWeight.text = message.toString() + " Grams"
 
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     }
@@ -143,6 +272,8 @@ class HomeFragment : Fragment() {
 
 
         }
+
+         */
 
     }
 /*
