@@ -39,6 +39,8 @@ android {
     }
 }
 
+
+
 dependencies {
 
     implementation("androidx.core:core-ktx:1.9.0")
@@ -58,5 +60,9 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // Eclipse Paho MQTT dependencies
+    implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2")
+    implementation("org.eclipse.paho:org.eclipse.paho.android.service:1.0.2")
 
 }
